@@ -18,32 +18,32 @@ class IntelligentCacheService
     }
 
     /**
-     * توليد مفتاح فريد لكل صفحة بناءً على الرابط والمتغيرات
+     * Generate a unique cache key for a page based on URL and context.
      */
     public function getCacheKey($request): string
     {
         $url = $request->fullUrl();
         $method = $request->method();
         
-        // نأخذ في الاعتبار اللغة لو كانت موجودة في الجلسة أو الرابط
+        // Consider locale if present in session or URL
         $locale = app()->getLocale();
         
         return 'smart_cache_' . md5($url . $method . $locale);
     }
 
     /**
-     * هل يجب تخزين هذا الطلب؟
+     * Determine if the request should be cached.
      */
     public function shouldCache($request, $response): bool
     {
         if (!$this->config['enabled']) return false;
         
-        // نخزن فقط طلبات GET الناجحة
+        // Cache only successful GET requests
         if (!$request->isMethod('GET') || !$response->isSuccessful()) {
             return false;
         }
 
-        // التأكد أن الرابط ليس مستبعداً
+        // Ensure path is not excluded
         foreach ($this->config['exclude'] as $pattern) {
             if ($request->is($pattern)) return false;
         }
@@ -52,23 +52,23 @@ class IntelligentCacheService
     }
 
     /**
-     * مسح الكاش بالكامل أو لمسار معين
+     * Clear the entire cache or specific path.
      */
     public function clear(): bool
     {
-        // هذه ستمسح كل ما يبدأ بـ smart_cache_
-        // ملاحظة: في Laravel الـ file driver لا يدعم مسح جزء معين بسهولة 
-        // سنستخدم نظام تتبع لاحقاً، حالياً سنقوم بمسح الكاش العام للتأكد من ظهور المقالات
+        // Flush all items starting with smart_cache_
+        // Note: Laravel's file driver does not support tags easily.
+        // We will use a tracking system later; for now, flush all for accuracy.
         return Cache::flush(); 
     }
 
     /**
-     * مسح ذكي عند تحديث مقال
+     * Intelligent invalidation when a model is updated.
      */
     public function forgetForModel(string $modelClass): void
     {
-        // هنا سنضيف المنطق الذي يمسح صفحات معينة مرتبطة بالموديل
-        // حالياً سنمسح الكاش لضمان التحديث الفوري كما طلبت
+        // Logic to clear specific pages related to the model
+        // Currently flushing all to ensure immediate update as requested
         $this->clear();
     }
 }

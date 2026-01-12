@@ -21,10 +21,10 @@ class CacheResponse
 
     public function handle(Request $request, Closure $next): Response
     {
-        // 1. توليد المفتاح الفريد لهذه الصفحة
+        // 1. Generate unique key for this request
         $key = $this->cacheService->getCacheKey($request);
 
-        // 2. إذا كانت الصفحة مخزنة سابقاً، أرجعها فوراً
+        // 2. If cached, return immediately
         if (Cache::has($key)) {
             $cachedContent = Cache::get($key);
             $response = response($cachedContent);
@@ -37,10 +37,10 @@ class CacheResponse
             return $response;
         }
 
-        // 3. إذا لم تكن مخزنة، تابع تنفيذ الطلب
+        // 3. If not cached, proceed with request
         $response = $next($request);
 
-        // 4. إذا كانت الصفحة مؤهلة للتخزين، قم بتخزينها
+        // 4. If response is cacheable, store it
         if ($this->cacheService->shouldCache($request, $response)) {
             Cache::put($key, $response->getContent(), config('intelligent-cache.lifetime'));
             
@@ -49,21 +49,21 @@ class CacheResponse
             }
         }
 
-        // 5. تطبيق الـ Headers الذكية (لحل مشكلة no-cache)
+        // 5. Apply smart headers (Solve no-cache issue)
         $this->applySmartHeaders($response);
 
         return $response;
     }
 
     /**
-     * حل مشكلة الـ Cache-Control
+     * Solve the Cache-Control issue.
      */
     protected function applySmartHeaders(Response $response): void
     {
         $cacheControl = config('intelligent-cache.headers.cache_control');
         $response->headers->set('Cache-Control', $cacheControl);
         
-        // إزالة الـ Headers التي تمنع التخزين لو كتبت بواسطة سيرفرات أخرى
+        // Remove headers that prevent caching if set by other servers
         $response->headers->remove('Pragma');
         $response->headers->remove('Expires');
     }

@@ -2,29 +2,29 @@
 
 return [
     /*
-     * إيقاف أو تشغيل المكتبة بالكامل
+     * Enable or disable the entire caching system.
      */
     'enabled' => env('INTELLIGENT_CACHE_ENABLED', true),
 
     /*
-     * المدة الافتراضية للتخزين (بالثواني)
-     * 3600 = ساعة واحدة
+     * Default cache lifetime in seconds.
+     * 3600 = 1 hour.
      */
     'lifetime' => env('INTELLIGENT_CACHE_LIFETIME', 3600),
 
     /*
-     * ميزة التخلص الذكي من الكاش
-     * عند تحديث موديل معين، سيتم مسح الكاش المرتبط به تلقائياً
+     * Smart cache invalidation feature.
+     * When a specific model is updated, the associated cache will be cleared automatically.
      */
     'auto_invalidation' => [
         'enabled' => true,
         'models' => [
-            // مثال: 'App\Models\Article' => ['articles', 'home'],
+            // Example: 'App\Models\Article' => ['articles', 'home'],
         ],
     ],
 
     /*
-     * الروابط التي لا نريد تخزينها (مثل لوحة التحكم)
+     * Routes that should never be cached (e.g., admin panels).
      */
     'exclude' => [
         'admin/*',
@@ -34,16 +34,16 @@ return [
     ],
 
     /*
-     * إعدادات الـ Headers لتحسين الـ SEO وسرعة المتصفح
+     * Header settings to improve SEO and browser caching performance.
      */
     'headers' => [
         'cache_control' => 'public, max-age=3600, must-revalidate',
-        'add_cache_status_header' => true, // يضيف X-Cache: HIT أو MISS للرد
+        'add_cache_status_header' => true, // Adds X-Cache: HIT or MISS to the response
     ],
 
     /*
-     * طريقة التخزين
-     * يفضل استخدام file أو redis
+     * Cache driver for storing responses.
+     * Recommended: file or redis.
      */
     'driver' => env('INTELLIGENT_CACHE_DRIVER', 'file'),
 ];

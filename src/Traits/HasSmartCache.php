@@ -9,7 +9,7 @@ use Shammaa\IntelligentCache\Services\IntelligentCacheService;
 trait HasSmartCache
 {
     /**
-     * يتم استدعاء هذه الدالة تلقائياً بواسطة لارافيل عند إقلاع الموديل
+     * Boot the trait and register model event listeners.
      */
     protected static function bootHasSmartCache(): void
     {
@@ -29,13 +29,13 @@ trait HasSmartCache
     }
 
     /**
-     * مسح الكاش المرتبط بهذا الموديل
+     * Clear the cache associated with this model.
      */
     public static function clearIntelligentCache(): void
     {
         app(IntelligentCacheService::class)->clear();
         
-        // هنا يمكن لاحقاً إضافة "تسخين الكاش" (Cache Warming)
-        // أي أن السيرفر يزور الصفحات المهمة برمجياً ليخزنها من جديد
+        // Cache warming logic can be added here later
+        // (e.g., dispatch a job to crawl important pages)
     }
 }
