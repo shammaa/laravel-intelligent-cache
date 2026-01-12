@@ -14,19 +14,7 @@
 
 ## 🛠 Installation
 
-### Local Development
-To use this package locally, add the path to your project's `composer.json`:
-
-```json
-"repositories": [
-    {
-        "type": "path",
-        "url": "../packages/laravel-intelligent-cache"
-    }
-],
-```
-
-Then install via composer:
+You can install the package via composer:
 
 ```bash
 composer require shammaa/laravel-intelligent-cache
