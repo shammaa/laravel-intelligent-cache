@@ -45,18 +45,37 @@ class Article extends Model
 ```
 
 ### 2. Speed Up Your Pages
-The middleware is automatically registered with the alias `smart_cache`. You can apply it to individual routes or groups in your `routes/web.php`:
+
+#### Option A: Global Registration (Recommended)
+To solve the `no-cache` issue site-wide, you can register the middleware globally. It automatically excludes admin and login routes based on your config.
+
+**Laravel 11 (`bootstrap/app.php`):**
+```php
+->withMiddleware(function (Middleware $middleware) {
+    $middleware->web(append: [
+        \Shammaa\IntelligentCache\Http\Middleware\CacheResponse::class,
+    ]);
+})
+```
+
+**Laravel 10 & 9 (`app/Http/Kernel.php`):**
+Add it to your `web` middleware group:
+```php
+protected $middlewareGroups = [
+    'web' => [
+        // ...
+        \Shammaa\IntelligentCache\Http\Middleware\CacheResponse::class,
+    ],
+];
+```
+
+#### Option B: Route Specific
+Alternatively, apply it to specific routes using the automatically registered alias `smart_cache`:
 
 ```php
-// Apply to a group of routes
 Route::middleware(['smart_cache'])->group(function () {
-    Route::get('/', [HomeController::class, 'index']);
     Route::get('/articles', [ArticleController::class, 'index']);
-    Route::get('/article/{slug}', [ArticleController::class, 'show']);
 });
-
-// Or apply to a single route
-Route::get('/about', [PageController::class, 'about'])->middleware('smart_cache');
 ```
 
 ---
