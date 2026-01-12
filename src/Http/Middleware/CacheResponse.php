@@ -21,10 +21,19 @@ class CacheResponse
 
     public function handle(Request $request, Closure $next): Response
     {
-        // 1. Generate unique key for this request
+        // 1. Only handle GET requests
+        if (!$request->isMethod('GET')) {
+            return $next($request);
+        }
+
+        // 2. Quick check for common image/binary extensions to skip early
+        if (preg_match('/\.(jpg|jpeg|png|gif|svg|webp|pdf|zip|css|js)$/i', $request->getPathInfo())) {
+            return $next($request);
+        }
+
         $key = $this->cacheService->getCacheKey($request);
 
-        // 2. If cached, return immediately
+        // 3. If cached, return immediately
         if (Cache::has($key)) {
             $cachedContent = Cache::get($key);
             $response = response($cachedContent);
@@ -37,34 +46,34 @@ class CacheResponse
             return $response;
         }
 
-        // 3. If not cached, proceed with request
         $response = $next($request);
 
-        // 4. If response is cacheable, store it
+        // 4. If response is cacheable, store it and apply headers
         if ($this->cacheService->shouldCache($request, $response)) {
             Cache::put($key, $response->getContent(), config('intelligent-cache.lifetime'));
             
             if (config('intelligent-cache.headers.add_cache_status_header')) {
                 $response->headers->set('X-Cache', 'MISS');
             }
-        }
 
-        // 5. Apply smart headers (Solve no-cache issue)
-        $this->applySmartHeaders($response);
+            $this->applySmartHeaders($response);
+        }
 
         return $response;
     }
 
     /**
-     * Solve the Cache-Control issue.
+     * Solve the Cache-Control issue for HTML responses only.
      */
     protected function applySmartHeaders(Response $response): void
     {
-        $cacheControl = config('intelligent-cache.headers.cache_control');
-        $response->headers->set('Cache-Control', $cacheControl);
-        
-        // Remove headers that prevent caching if set by other servers
-        $response->headers->remove('Pragma');
-        $response->headers->remove('Expires');
+        // Double check it's HTML before touching headers
+        $contentType = $response->headers->get('Content-Type');
+        if (str_contains((string) $contentType, 'text/html')) {
+            $cacheControl = config('intelligent-cache.headers.cache_control');
+            $response->headers->set('Cache-Control', $cacheControl);
+            $response->headers->remove('Pragma');
+            $response->headers->remove('Expires');
+        }
     }
 }
