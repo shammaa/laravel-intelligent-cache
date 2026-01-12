@@ -35,8 +35,17 @@ class CacheResponse
 
         // 3. If cached, return immediately
         if (Cache::has($key)) {
-            $cachedContent = Cache::get($key);
-            $response = response($cachedContent);
+            $cacheData = Cache::get($key);
+            
+            // Check if it's the new array format (v1.0.9+)
+            if (is_array($cacheData) && isset($cacheData['c'])) {
+                $response = response(base64_decode($cacheData['c']));
+                if (isset($cacheData['t'])) $response->headers->set('Content-Type', $cacheData['t']);
+                if (isset($cacheData['e'])) $response->headers->set('Content-Encoding', $cacheData['e']);
+            } else {
+                // Fallback for old cache format
+                $response = response($cacheData);
+            }
             
             if (config('intelligent-cache.headers.add_cache_status_header')) {
                 $response->headers->set('X-Cache', 'HIT');
@@ -50,7 +59,14 @@ class CacheResponse
 
         // 4. If response is cacheable, store it and apply headers
         if ($this->cacheService->shouldCache($request, $response)) {
-            Cache::put($key, $response->getContent(), config('intelligent-cache.lifetime'));
+            // Store as binary-safe array
+            $cacheData = [
+                'c' => base64_encode($response->getContent()),
+                't' => $response->headers->get('Content-Type'),
+                'e' => $response->headers->get('Content-Encoding'),
+            ];
+
+            Cache::put($key, $cacheData, config('intelligent-cache.lifetime'));
             
             if (config('intelligent-cache.headers.add_cache_status_header')) {
                 $response->headers->set('X-Cache', 'MISS');
