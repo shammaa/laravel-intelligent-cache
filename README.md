@@ -45,14 +45,18 @@ class Article extends Model
 ```
 
 ### 2. Speed Up Your Pages
-Apply the `smart_cache` middleware to your routes in `web.php`:
+The middleware is automatically registered with the alias `smart_cache`. You can apply it to individual routes or groups in your `routes/web.php`:
 
 ```php
+// Apply to a group of routes
 Route::middleware(['smart_cache'])->group(function () {
     Route::get('/', [HomeController::class, 'index']);
     Route::get('/articles', [ArticleController::class, 'index']);
     Route::get('/article/{slug}', [ArticleController::class, 'show']);
 });
+
+// Or apply to a single route
+Route::get('/about', [PageController::class, 'about'])->middleware('smart_cache');
 ```
 
 ---
