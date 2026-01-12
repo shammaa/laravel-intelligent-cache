@@ -43,6 +43,12 @@ class IntelligentCacheService
             return false;
         }
 
+        // ONLY cache HTML responses (avoids breaking images, PDFs, JSON, etc.)
+        $contentType = $response->headers->get('Content-Type');
+        if (!str_contains((string) $contentType, 'text/html')) {
+            return false;
+        }
+
         // Ensure path is not excluded
         foreach ($this->config['exclude'] as $pattern) {
             if ($request->is($pattern)) return false;
