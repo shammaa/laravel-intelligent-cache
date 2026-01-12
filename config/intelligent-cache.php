@@ -39,6 +39,7 @@ return [
     'headers' => [
         'cache_control' => 'public, max-age=3600, must-revalidate',
         'add_cache_status_header' => true, // Adds X-Cache: HIT or MISS to the response
+        'force_headers' => true, // Forcefully overwrite other middleware headers (like session no-cache)
     ],
 
     /*

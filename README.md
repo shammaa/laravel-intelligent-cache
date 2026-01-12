@@ -47,24 +47,24 @@ class Article extends Model
 ### 2. Speed Up Your Pages
 
 #### Option A: Global Registration (Recommended)
-To solve the `no-cache` issue site-wide, you can register the middleware globally. It automatically excludes admin and login routes based on your config.
+To solve the `no-cache` issue site-wide, you must register the middleware at the **beginning** of the stack (Outermost). This ensures it overrides any headers set by other middlewares (like Session).
 
 **Laravel 11 (`bootstrap/app.php`):**
 ```php
 ->withMiddleware(function (Middleware $middleware) {
-    $middleware->web(append: [
+    $middleware->web(prepend: [ // Use PREPEND here
         \Shammaa\IntelligentCache\Http\Middleware\CacheResponse::class,
     ]);
 })
 ```
 
 **Laravel 10 & 9 (`app/Http/Kernel.php`):**
-Add it to your `web` middleware group:
+Add it at the **TOP** of your `web` middleware group:
 ```php
 protected $middlewareGroups = [
     'web' => [
-        // ...
-        \Shammaa\IntelligentCache\Http\Middleware\CacheResponse::class,
+        \Shammaa\IntelligentCache\Http\Middleware\CacheResponse::class, // Put it at the top
+        // ... other middlewares
     ],
 ];
 ```

@@ -71,9 +71,16 @@ class CacheResponse
         $contentType = $response->headers->get('Content-Type');
         if (str_contains((string) $contentType, 'text/html')) {
             $cacheControl = config('intelligent-cache.headers.cache_control');
-            $response->headers->set('Cache-Control', $cacheControl);
-            $response->headers->remove('Pragma');
-            $response->headers->remove('Expires');
+            $force = config('intelligent-cache.headers.force_headers', false);
+
+            if ($force) {
+                // Remove headers that prevent caching
+                $response->headers->remove('Pragma');
+                $response->headers->remove('Expires');
+                $response->headers->set('Cache-Control', $cacheControl, true); // true = replace existing
+            } else {
+                $response->headers->set('Cache-Control', $cacheControl);
+            }
         }
     }
 }
