@@ -71,15 +71,18 @@ class CacheResponse
         $contentType = $response->headers->get('Content-Type');
         if (str_contains((string) $contentType, 'text/html')) {
             $cacheControl = config('intelligent-cache.headers.cache_control');
-            $force = config('intelligent-cache.headers.force_headers', false);
+            
+            // 1. Forcefully CLEAR any existing cache headers set by other middlewares or PHP
+            $response->headers->remove('Cache-Control');
+            $response->headers->remove('Pragma');
+            $response->headers->remove('Expires');
 
-            if ($force) {
-                // Remove headers that prevent caching
-                $response->headers->remove('Pragma');
-                $response->headers->remove('Expires');
-                $response->headers->set('Cache-Control', $cacheControl, true); // true = replace existing
-            } else {
-                $response->headers->set('Cache-Control', $cacheControl);
+            // 2. Set our optimized headers
+            $response->headers->set('Cache-Control', $cacheControl);
+            
+            // Optional: Ensure No-Cache doesn't leak from PHP session_cache_limiter
+            if (function_exists('header_remove')) {
+                header_remove('Pragma');
             }
         }
     }
